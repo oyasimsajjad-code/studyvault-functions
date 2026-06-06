@@ -18,7 +18,8 @@ app.post('/sendPushNotification', async (req, res) => {
             },
             body: JSON.stringify({
                 app_id: 'e912442b-3a96-45f2-95a7-5ac233155ca4',
-                filters: [{ field: 'tag', key: 'uid', relation: '=', value: toUid }],
+                include_aliases: { external_id: [toUid] },
+target_channel: 'push',
                 headings: { en: title },
                 contents: { en: body }
             })

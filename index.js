@@ -14,16 +14,20 @@ app.post('/sendPushNotification', async (req, res) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Key os_v2_app_5ejeikz2szc7ffnhllbdgfk4usj23ep7sbdeeinvu52v3efc4tvuygaeibzrmster4gku4lkuycj6mxim64mbk3i7dp2n6auyul6q5i'
+                // এখানে 'Key' বদলে 'Basic' করে দেওয়া হয়েছে
+                'Authorization': 'Basic os_v2_app_5ejeikz2szc7ffnhllbdgfk4usj23ep7sbdeeinvu52v3efc4tvuygaeibzrmster4gku4lkuycj6mxim64mbk3i7dp2n6auyul6q5i'
             },
             body: JSON.stringify({
                 app_id: 'e912442b-3a96-45f2-95a7-5ac233155ca4',
-                include_aliases: { external_id: [toUid] },
-target_channel: 'push',
-                headings: { en: title },
-                contents: { en: body }
+                include_aliases: { 
+                    external_id: [toUid] // ব্র্যাকেটের পজিশন ঠিক করা হয়েছে
+                },
+                target_channel: 'push', // এটা ওয়ানসিগনালের নতুন নিয়ম
+                headings: { en: title || "StudyVault" },
+                contents: { en: body || "New Notification" }
             })
         });
+
         const data = await response.json();
         console.log('OneSignal response:', JSON.stringify(data));
         res.json({ success: true, data });
@@ -33,5 +37,5 @@ target_channel: 'push',
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Legacy server listening...'));
+// Vercel-এর জন্য এক্সপোর্ট
+module.exports = app;

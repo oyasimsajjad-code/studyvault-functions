@@ -1,58 +1,36 @@
 const express = require('express');
 const cors = require('cors');
-const admin = require('firebase-admin');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-        })
-    });
-}
 
 app.post('/sendPushNotification', async (req, res) => {
     const { toUid, title, body } = req.body;
     if (!toUid) return res.status(400).json({ error: 'toUid required' });
 
     try {
-        const tokenDoc = await admin.firestore()
-            .collection('fcmTokens').doc(toUid).get();
-
-        if (!tokenDoc.exists) return res.status(404).json({ error: 'Token not found for uid: ' + toUid });
-
-        const fcmToken = tokenDoc.data().token;
-        console.log('Sending to token:', fcmToken?.substring(0,20));
-
-        const result = await admin.messaging().send({
-            token: fcmToken,
-            notification: { title, body },
-            android: {
-                priority: 'high',
-                notification: {
-                    sound: 'default',
-                    channelId: 'default'
-                }
+        const response = await fetch('https://onesignal.com/api/v1/notifications', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Key os_v2_app_5ejeikz2szc7ffnhllbdgfk4usj23ep7sbdeeinvu52v3efc4tvuygaeibzrmster4gku4lkuycj6mxim64mbk3i7dp2n6auyul6q5i'
             },
-            webpush: {
-                notification: {
-                    title, body,
-                    icon: 'https://ui-avatars.com/api/?name=SV&background=7000ff&color=fff&size=64'
-                }
-            }
+            body: JSON.stringify({
+                app_id: 'e912442b-3a96-45f2-95a7-5ac233155ca4',
+                filters: [{ field: 'tag', key: 'uid', relation: '=', value: toUid }],
+                headings: { en: title },
+                contents: { en: body }
+            })
         });
-
-        res.json({ success: true, result });
+        const data = await response.json();
+        console.log('OneSignal response:', JSON.stringify(data));
+        res.json({ success: true, data });
     } catch (e) {
-        console.error('FCM error:', e.message);
+        console.error(e);
         res.status(500).json({ error: e.message });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Server running on port', PORT));
+app.listen(PORT, () => console.log('Legacy server listening...'));

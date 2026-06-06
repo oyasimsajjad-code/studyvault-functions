@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -24,12 +23,10 @@ app.post('/sendPushNotification', async (req, res) => {
             })
         });
         const data = await response.json();
-        console.log('OneSignal response:', JSON.stringify(data));
         res.json({ success: true, data });
     } catch(e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Server on port', PORT));
+app.listen(process.env.PORT || 3000);

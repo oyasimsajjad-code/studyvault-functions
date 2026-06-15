@@ -28,5 +28,29 @@ app.post('/sendPushNotification', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+app.post('/api/ai', async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    try {
+        const { system, messages, max_tokens } = req.body;
+        const contents = (messages || []).map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }]
+        }));
+        const geminiBody = {
+            contents,
+            generationConfig: { maxOutputTokens: max_tokens || 1000 }
+        };
+        if (system) geminiBody.systemInstruction = { parts: [{ text: system }] };
 
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(geminiBody) }
+        );
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        res.json({ content: [{ type: 'text', text }] });
+    } catch (e) {
+        res.status(500).json({ error: e.message, content: [{ type: 'text', text: '' }] });
+    }
+});
 app.listen(process.env.PORT || 3000);

@@ -28,8 +28,8 @@ app.post('/sendPushNotification', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+
 app.post('/api/ai', async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
     try {
         const { system, messages, max_tokens } = req.body;
         const contents = (messages || []).map(m => ({
@@ -53,4 +53,5 @@ app.post('/api/ai', async (req, res) => {
         res.status(500).json({ error: e.message, content: [{ type: 'text', text: '' }] });
     }
 });
+
 app.listen(process.env.PORT || 3000);
